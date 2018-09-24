@@ -13,15 +13,45 @@ ARGLESS_CLASSES = [
 def get_package_info(pkgname):
     """returns a dict containing info about modules, classes, functions"""
     pkg = importlib.import_module(pkgname)
+    return _get_package_info(pkg)
+
+def _get_package_info(pkg):
+    """returns a dict containing info about modules, classes, functions"""
     _modules = pkgutil.walk_packages(pkg.__path__)
     modules = []
-
-    for (_, name, _) in _modules:
+    subpackages = []
+    for (_, name, ispkg) in _modules:
         if not name.startswith('_'):
-            module = importlib.import_module('%s.%s' % (pkgname, name))
-            modules.append(module)
+            import_str = '%s.%s' % (pkg.__name__, name)
+            # try:
+            #     obj = importlib.import_module(import_str)
+            #     if ispkg:
+            #         subpackages.append(obj)
+            #     else:
+            #         # _module = pkg.__loader__.load_module(name)
+            #         modules.append(obj)
+            # except:
+            #     print('skipped %s, %s' % (import_str, ispkg))
 
-    res = get_module_info(modules)
+            # new from py3.5
+            fullname = '%s.%s' % (pkg.__name__, name)
+            spec = importlib.util.find_spec(fullname)
+            if spec is not None:
+                obj = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(obj)
+                if ispkg:
+                    subpackages.append(obj)
+                else:
+                    modules.append(obj)
+            else:
+                print("not found/skipped %s (ispkg: %s)" % (fullname, ispkg))
+
+
+    res = {}
+    res['modules'] = get_module_info(modules)
+    res['subpackages'] = {}
+    for subpkg in subpackages:
+        res['subpackages'][subpkg.__name__] = _get_package_info(subpkg)
     return res
 
 def get_module_info(modules):
