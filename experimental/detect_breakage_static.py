@@ -2,15 +2,21 @@ import ast
 import importlib
 import os
 
-def get_package_info(pkgname):
+class PackageNotFound(Exception):
+    pass
+
+def get_package_location(pkgname):
     """returns a dict containing info about modules, classes, functions"""
     spec = importlib.util.find_spec(pkgname)
+    if spec is None:
+        errmsg = ('Could not find "%s". Please make sure that '
+                  'this package is installed.' % pkgname)
+        raise PackageNotFound(errmsg)
     locations = [l for l in spec.submodule_search_locations]
     root_dir = locations[0]
-    info = _get_package_info(root_dir)
-    return info
+    return root_dir
 
-def _get_package_info(root_dir):
+def get_package_info(root_dir):
     info = {}
     info['modules'] = {}
     subpackages = []
@@ -22,6 +28,7 @@ def _get_package_info(root_dir):
             with open(path) as f:
                 node = ast.parse(f.read(), path)
             modname = name[:-3]
+            print(modname)
             info['modules'][modname] = get_module_info(node)
         elif not name.startswith('.'):
             subpackages.append(name)
@@ -29,7 +36,7 @@ def _get_package_info(root_dir):
     info['subpackages'] = {}
     for name in subpackages:
         path = os.path.join(root_dir, name)
-        info['subpackages'][name] = _get_package_info(path)
+        info['subpackages'][name] = get_package_info(path)
 
     return info
 
@@ -48,19 +55,11 @@ def get_class_info(classes):
     """returns a dict containing info on args, subclasses and functions"""
     res = {}
     for node in classes:
-        if node.name.startswith('_'):
+        if node.name.startswith('_') or res.get(node.name) is not None:
             continue
 
-        init_func = None
-        subclasses, functions = [], []
-        for n in node.body:
-            if hasattr(n, 'name') and n.name == '__init__':
-                init_func = n
-            if isinstance(n, ast.ClassDef):
-                subclasses.append(n)
-            elif isinstance(n, ast.FunctionDef):
-                functions.append(n)
-
+        # assumes that bases are user-defined within the same module
+        init_func, subclasses, functions = _get_class_attrs(node, classes)
         args = []
         if init_func is not None:
             args = get_args(init_func.args)
@@ -72,14 +71,43 @@ def get_class_info(classes):
 
     return res
 
+def _get_class_attrs(node, classes):
+    init_func, subclasses, functions = None, [], []
+    for n in node.body:
+        if hasattr(n, 'name') and n.name == '__init__':
+            init_func = n
+        if isinstance(n, ast.ClassDef):
+            subclasses.append(n)
+        elif isinstance(n, ast.FunctionDef):
+            functions.append(n)
+
+    # inheritance priority is preorder
+    basenames = [n.id for n in node.bases]
+    bases = {n.name:n for n in classes if n.name in basenames}
+    for bname in basenames:
+        if bases.get(bname) is None:
+            continue
+        n = bases[bname]
+        _init_func, _subclasses, _functions = _get_class_attrs(n, classes)
+        if init_func is None:
+            init_func = _init_func
+        subclasses.extend(_subclasses)
+        functions.extend(_functions)
+    return (init_func, subclasses, functions)
+
+
+def get_basenames(bases):
+    pass
+
 def get_function_info(functions):
     """returns a dict mapping function name to function args"""
     res = {}
     for node in functions:
-        if node.name.startswith('_'):
+        fname = node.name
+        if fname.startswith('_') or res.get(fname) is not None:
             continue
-        res[node.name] = {}
-        res[node.name]['args'] = get_args(node.args)
+        res[fname] = {}
+        res[fname]['args'] = get_args(node.args)
     return res
 
 def get_args(node):
@@ -96,9 +124,25 @@ def get_args(node):
 
 # Testing - will delete later
 if __name__ == '__main__':
-    pkgname = 'compatibility_lib'
+    # pkgname = 'compatibility_lib'
     # pkgname = 'google.cloud.bigquery'
-    res = get_package_info(pkgname)
+    # loc = get_package_location(pkgname)
+    # loc = '/usr/local/google/home/pekopeko/Google/cloud-opensource-python/experimental/test/simple_inheritance'
+
+    # res = get_package_info(loc)
+
+    code = (
+        'class Bar(object):\n'
+        '    def foo(a):\n'
+        '        pass\n'
+        'class Baz(object):\n'
+        '    def foo(b):\n'
+        '        pass\n'
+        'class Foo(Baz, Bar):\n'
+        '    pass\n')
+
+    node = ast.parse(code)
+    res = get_module_info(node)
 
     import json
     print(json.dumps(res, indent=4, sort_keys=True))
