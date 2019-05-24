@@ -908,6 +908,31 @@ class TestOutdatedDependency(BadgeTestCase):
     def setUp(self):
         BadgeTestCase.setUp(self)
 
+        self.off_by_minor_dep_info = dict(UP_TO_DATE_DEPS)
+        self.off_by_minor_dep_info['google-auth'] = {
+            'current_time': datetime.datetime.utcnow(),
+            'installed_version': '1.4.0',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.6.3',
+            'latest_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56)
+        }
+
+        self.off_by_patch_dep_info = dict(UP_TO_DATE_DEPS)
+        self.off_by_patch_dep_info['google-auth'] = {
+            'current_time': datetime.datetime.utcnow(),
+            'installed_version': '1.4.0',
+            'installed_version': '1.6.0',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.6.3',
+            'latest_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56)
+        }
+
         self.off_by_minor_expected_details = {
             'google-auth': {
                 'detail': 'google-auth is not up to date with the latest version',
@@ -959,27 +984,13 @@ class TestOutdatedDependency(BadgeTestCase):
             {'deprecated_deps': '', 'details': expected_details, 'status': expected_status})
 
     def test_pypi_py2py3_off_by_minor(self):
-        old_dep_info = dict(UP_TO_DATE_DEPS)
-        old_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.4.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        old_dep_info = self.off_by_minor_dep_info
         old_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                old_dep_info))
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                old_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            old_dep_compat_results.remove(compat_result)
+            old_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(old_dep_info))
 
         self.fake_store.save_compatibility_statuses(old_dep_compat_results)
         package_name = 'google-api-core'
@@ -988,27 +999,13 @@ class TestOutdatedDependency(BadgeTestCase):
             package_name, self.off_by_minor_expected_details)
 
     def test_git_py2py3_off_by_minor(self):
-        old_dep_info = dict(UP_TO_DATE_DEPS)
-        old_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.4.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        old_dep_info = self.off_by_minor_dep_info
         old_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                old_dep_info))
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                old_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            old_dep_compat_results.remove(compat_result)
+            old_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(old_dep_info))
 
         self.fake_store.save_compatibility_statuses(old_dep_compat_results)
         package_name = 'git+git://github.com/google/api-core.git'
@@ -1017,27 +1014,13 @@ class TestOutdatedDependency(BadgeTestCase):
             package_name, self.off_by_minor_expected_details)
 
     def test_pypi_py2py3_off_by_patch(self):
-        old_dep_info = dict(UP_TO_DATE_DEPS)
-        old_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.6.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        old_dep_info = self.off_by_patch_dep_info
         old_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                old_dep_info))
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                old_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            old_dep_compat_results.remove(compat_result)
+            old_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(old_dep_info))
 
         self.fake_store.save_compatibility_statuses(old_dep_compat_results)
         package_name = 'google-api-core'
@@ -1046,27 +1029,14 @@ class TestOutdatedDependency(BadgeTestCase):
             package_name, self.off_by_patch_expected_details)
 
     def test_git_py2py3_off_by_patch(self):
-        old_dep_info = dict(UP_TO_DATE_DEPS)
-        old_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.6.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        old_dep_info = self.off_by_patch_dep_info
         old_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        old_dep_compat_results.remove(GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                old_dep_info))
-        old_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                old_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            old_dep_compat_results.remove(compat_result)
+            old_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(old_dep_info))
+        self.fake_store.save_compatibility_statuses(old_dep_compat_results)
 
         self.fake_store.save_compatibility_statuses(old_dep_compat_results)
         package_name = 'git+git://github.com/google/api-core.git'
@@ -1080,6 +1050,52 @@ class TestObsoleteDependency(BadgeTestCase):
 
     def setUp(self):
         BadgeTestCase.setUp(self)
+
+        self.off_by_major_dep_info = dict(UP_TO_DATE_DEPS)
+        self.off_by_major_dep_info['google-auth'] = {
+            'current_time': datetime.datetime.utcnow(),
+            'installed_version': '0.9.9',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.6.3',
+            'latest_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56)
+        }
+
+        self.off_by_minor_dep_info = dict(UP_TO_DATE_DEPS)
+        self.off_by_minor_dep_info['google-auth'] = {
+            'current_time': datetime.datetime.utcnow(),
+            'installed_version': '1.3.0',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.6.3',
+            'latest_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56)
+        }
+
+        self.expired_major_grace_period_dep_info = dict(UP_TO_DATE_DEPS)
+        self.expired_major_grace_period_dep_info['google-auth'] = {
+            'current_time': datetime.datetime(2019, 3, 23, 0, 0, 0),
+            'installed_version': '0.9.9',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.0.0',
+            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
+        }
+
+        self.expired_default_grace_period_dep_info = dict(UP_TO_DATE_DEPS)
+        self.expired_default_grace_period_dep_info['google-auth'] = {
+            'current_time': datetime.datetime(2019, 8, 23, 0, 0, 0),
+            'installed_version': '1.3.0',
+            'installed_version_time': datetime.datetime(
+                2019, 2, 19, 21, 15, 56),
+            'is_latest': False,
+            'latest_version': '1.0.0',
+            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
+        }
 
         self.off_by_major_expected_details = {
             'google-auth': {
@@ -1154,27 +1170,13 @@ class TestObsoleteDependency(BadgeTestCase):
             {'deprecated_deps': '', 'details': expected_details, 'status': expected_status})
 
     def test_pypi_py2py3_off_by_major(self):
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '0.9.9',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.off_by_major_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1184,29 +1186,13 @@ class TestObsoleteDependency(BadgeTestCase):
             package_name, self.off_by_major_expected_details)
 
     def test_git_py2py3_off_by_major(self):
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '0.9.9',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.off_by_major_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1216,27 +1202,13 @@ class TestObsoleteDependency(BadgeTestCase):
             package_name, self.off_by_major_expected_details)
 
     def test_pypi_py2py3_off_by_minor(self):
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.3.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.off_by_minor_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1246,29 +1218,13 @@ class TestObsoleteDependency(BadgeTestCase):
             package_name, self.off_by_minor_expected_details)
 
     def test_git_py2py3_off_by_minor(self):
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime.utcnow(),
-            'installed_version': '1.3.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.6.3',
-            'latest_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.off_by_minor_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1279,26 +1235,13 @@ class TestObsoleteDependency(BadgeTestCase):
 
     def test_pypi_py2py3_expired_major_grace_period(self):
         """Tests that "old dependency" eventually changes to "obsolete ..."."""
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime(2019, 3, 23, 0, 0, 0),
-            'installed_version': '0.9.9',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.0.0',
-            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.expired_major_grace_period_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1309,28 +1252,13 @@ class TestObsoleteDependency(BadgeTestCase):
 
     def test_git_py2py3_expired_major_grace_period(self):
         """Tests that "old dependency" eventually changes to "obsolete ..."."""
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime(2019, 3, 23, 0, 0, 0),
-            'installed_version': '0.9.9',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.0.0',
-            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.expired_major_grace_period_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
@@ -1341,29 +1269,17 @@ class TestObsoleteDependency(BadgeTestCase):
 
     def test_pypi_py2py3_expired_default_grace_period(self):
         """Tests that "old dependency" eventually changes to "obsolete ..."."""
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime(2019, 8, 23, 0, 0, 0),
-            'installed_version': '1.3.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.0.0',
-            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.expired_default_grace_period_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(GOOGLE_API_CORE_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
+
         package_name = 'google-api-core'
         self.assertImageResponsePyPI(package_name)
         self.assertTargetResponse(
@@ -1371,28 +1287,13 @@ class TestObsoleteDependency(BadgeTestCase):
 
     def test_git_py2py3_expired_default_grace_period(self):
         """Tests that "old dependency" eventually changes to "obsolete ..."."""
-        obsolete_dep_info = dict(UP_TO_DATE_DEPS)
-        obsolete_dep_info['google-auth'] = {
-            'current_time': datetime.datetime(2019, 8, 23, 0, 0, 0),
-            'installed_version': '1.3.0',
-            'installed_version_time': datetime.datetime(
-                2019, 2, 19, 21, 15, 56),
-            'is_latest': False,
-            'latest_version': '1.0.0',
-            'latest_version_time': datetime.datetime(2019, 2, 19, 21, 15, 56)
-        }
-
+        obsolete_dep_info = self.expired_default_grace_period_dep_info
         obsolete_dep_compat_results = list(RECENT_SUCCESS_DATA)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2)
-        obsolete_dep_compat_results.remove(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3)
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2.with_updated_dependency_info(
-                obsolete_dep_info))
-        obsolete_dep_compat_results.append(
-            GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3.with_updated_dependency_info(
-                obsolete_dep_info))
+        for compat_result in [GOOGLE_API_CORE_GIT_RECENT_SUCCESS_2,
+                              GOOGLE_API_CORE_GIT_RECENT_SUCCESS_3]:
+            obsolete_dep_compat_results.remove(compat_result)
+            obsolete_dep_compat_results.append(
+                compat_result.with_updated_dependency_info(obsolete_dep_info))
 
         self.fake_store.save_compatibility_statuses(
             obsolete_dep_compat_results)
